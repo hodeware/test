@@ -56,11 +56,23 @@ export default function Extract() {
                 if (imgSrc.startsWith('data:')) {
                     const parts = imgSrc.split(',');
                     const mimeMatch = imgSrc.match(/data:([^;]+);/);
-                    const mediaType = mimeMatch ? mimeMatch[1] : 'image/png';
+                    let mediaType = mimeMatch ? mimeMatch[1] : 'image/png';
+
+                    // Detect actual image type from base64 data
+                    const base64Data = parts[1];
+                    if (base64Data.startsWith('R0lGOD')) {
+                        mediaType = 'image/gif';
+                    } else if (base64Data.startsWith('iVBORw')) {
+                        mediaType = 'image/png';
+                    } else if (base64Data.startsWith('/9j/')) {
+                        mediaType = 'image/jpeg';
+                    } else if (base64Data.startsWith('UklGR')) {
+                        mediaType = 'image/webp';
+                    }
 
                     images.push({
                         name: `inline_image_${index}`,
-                        data: parts[1], // Base64 data
+                        data: base64Data,
                         mediaType: mediaType
                     });
                 }
