@@ -42,14 +42,32 @@ export default function Extract() {
             return;
         }
 
-console.log(files)
-
         // Show loading state
         loadingElement.classList.remove('hidden');
         extractButton.disabled = true;
 
-        // Prepare images from files (if any)
+        // Prepare images from both data.images (inline) and files (uploaded)
         const images = [];
+
+        // Add inline images from data.images (these are from pasted content)
+        if (data.images && data.images.length > 0) {
+            data.images.forEach((imgSrc, index) => {
+                // Extract base64 data if it's a data URL
+                if (imgSrc.startsWith('data:')) {
+                    const parts = imgSrc.split(',');
+                    const mimeMatch = imgSrc.match(/data:([^;]+);/);
+                    const mediaType = mimeMatch ? mimeMatch[1] : 'image/png';
+
+                    images.push({
+                        name: `inline_image_${index}`,
+                        data: parts[1], // Base64 data
+                        mediaType: mediaType
+                    });
+                }
+            });
+        }
+
+        // Add uploaded files
         if (files && files.length > 0) {
             files.forEach(file => {
                 images.push({

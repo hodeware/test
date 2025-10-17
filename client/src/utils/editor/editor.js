@@ -31,6 +31,7 @@ function Editor() {
             // Accept drop files
             dropZone: true,
             dropAsSnippet: false,
+            pasteAsSnippet: false,
             acceptImages: true,
             acceptFiles: false,
             maxFileSize: 5000000,
@@ -323,6 +324,17 @@ function Editor() {
                 var d = document.createElement('div');
                 d.innerHTML = obj.editor.innerHTML;
 
+                // Replace img tags with placeholders
+                var images = d.querySelectorAll('img');
+                if (images.length) {
+                    data.images = [];
+                    for (var i = 0; i < images.length; i++) {
+                        data.images.push(images[i].src);
+                        var placeholder = document.createTextNode('{{' + i + '}}');
+                        images[i].parentNode.replaceChild(placeholder, images[i]);
+                    }
+                }
+
                 var text = d.innerHTML;
                 text = text.replace(/<br>/g, "\n");
                 text = text.replace(/<\/div>/g, "<\/div>\n");
@@ -499,10 +511,12 @@ function Editor() {
                         // Check if is data
                         element.setAttribute('tabindex', '900');
                         // Check attributes for persistence
-                        appendFile({
-                            result: element.src,
-                            size: element.length,
-                        });
+                        if (obj.options.pasteAsSnippet === true) {
+                            appendFile({
+                                result: element.src,
+                                size: element.length,
+                            });
+                        }
                     }
                 }
                 // Remove attributes
