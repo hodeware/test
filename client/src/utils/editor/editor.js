@@ -339,8 +339,7 @@ function Editor() {
                 text = text.replace(/<br>/g, "\r\n");
                 text = text.replace(/<\/div>/g, "\r\n");
                 text = text.replace(/<(?:.|\n)*?>/gm, "");
-                // Clean up multiple consecutive newlines
-                //text = text.replace(/\n{3,}/g, "\n\n");
+
                 data.content = text.trim();
 
                 // Process extensions
@@ -479,7 +478,7 @@ function Editor() {
         // Valid properties
         const validProperty = ['width', 'height', 'align', 'border', 'src', 'tabindex'];
         // Valid CSS attributes
-        const validStyle = ['color', 'font-weight', 'font-size', 'background', 'background-color', 'margin'];
+        const validStyle = ['color', 'font-weight', 'font-size', 'background', 'background-color', 'margin', 'text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left'];
 
         const parse = function(element) {
             // Remove elements that are not white-listed
@@ -494,16 +493,20 @@ function Editor() {
                 // Process style attribute
                 let elementStyle = element.getAttribute('style');
                 if (elementStyle) {
+                    console.log('Original style:', elementStyle);
                     style = [];
                     let t = elementStyle.split(';');
                     for (let j = 0; j < t.length; j++) {
                         let v = t[j].trim().split(':');
+                        console.log('Processing style property:', v[0].trim(), 'in validStyle?', validStyle.indexOf(v[0].trim()) >= 0);
                         if (validStyle.indexOf(v[0].trim()) >= 0) {
                             let k = v.shift();
                             v = v.join(':');
+                            console.log('Keeping style:', k + ':' + v);
                             style.push(k + ':' + v);
                         }
                     }
+                    console.log('Final style array:', style);
                 }
                 // Process image
                 if (element.tagName.toUpperCase() === 'IMG') {
@@ -561,85 +564,18 @@ function Editor() {
 
         var filter = function(data) {
             if (data) {
-                // Remove the entire <head> section from Word HTML
-                data = data.replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '');
-
-                // Remove Word's XML namespace declarations from the opening html tag
-                data = data.replace(/<html[^>]*>/gi, '<html>');
-                data = data.replace(/<\/html>/gi, '');
-
-                // Remove ALL HTML comments (more aggressive matching)
-                // This includes Word's conditional comments like <!--[if !vml]-->
+                data = data.replace(new RegExp('<!--(.*?)-->', 'gsi'), '');
                 data = data.replace(/<!--[\s\S]*?-->/gi, '');
                 data = data.replace(/<!\[if[\s\S]*?\]>/gi, '');
                 data = data.replace(/<!\[endif\]>/gi, '');
-
                 // Remove Word's XML namespace tags (w:, o:, m:, v:)
                 data = data.replace(/<\/?[womv]:[^>]*>/gi, '');
-
-                // Remove <style> tags and their contents
-                data = data.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-
-                // Remove <script> tags and their contents
-                data = data.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-
-                // Remove <link> tags
-                data = data.replace(/<link[^>]*>/gi, '');
-
-                // Remove <meta> tags
-                data = data.replace(/<meta[^>]*>/gi, '');
-
-                // Remove Word's <span> tags with their content (spans often just add styling)
-                data = data.replace(/<span[^>]*>/gi, '');
-                data = data.replace(/<\/span>/gi, '');
-
-                // Clean up Word's paragraph structure - convert <p> to <div>
-                data = data.replace(/<p[^>]*>/gi, '<div>');
-                data = data.replace(/<\/p>/gi, '</div>');
-
-                // Replace special Unicode whitespace characters
-                data = data.replace(/\u000B/g, ' '); // Vertical tab
-                data = data.replace(/\u000C/g, ' '); // Form feed
-                data = data.replace(/\u00A0/g, ' '); // Non-breaking space -> regular space
-                data = data.replace(/\u2028/g, ' '); // Line separator -> space (soft line break)
-                data = data.replace(/\u2029/g, ' '); // Paragraph separator -> space
-                data = data.replace(/\uFEFF/g, ''); // Zero-width no-break space
-                data = data.replace(/\u200B/g, ''); // Zero-width space
-                data = data.replace(/\u200C/g, ''); // Zero-width non-joiner
-                data = data.replace(/\u200D/g, ''); // Zero-width joiner
-
-                // Replace &nbsp; entities with regular spaces
-                data = data.replace(/&nbsp;/g, ' ');
-
-                // CRITICAL: Remove ALL line breaks within div content (Word's soft line breaks)
-                // Use [\s\S] instead of . to match everything including newlines
-                // Then replace the newlines with spaces
-                data = data.replace(/<div([^>]*)>([\s\S]*?)<\/div>/gi, function(match, attrs, content) {
-                    // Replace all newlines within this div's content with spaces
-                    const cleaned = content.replace(/[\r\n]+/g, ' ');
-                    return '<div' + attrs + '>' + cleaned + '</div>';
-                });
-
-                // Clean up multiple spaces
-                data = data.replace(/  +/g, ' ');
-
-                // Replace multiple <br> tags with max 2
-                data = data.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
-
-                // Remove empty paragraphs and divs
-                data = data.replace(/<div[^>]*>[\s]*<\/div>/gi, '');
             }
-
-            // Parse the HTML
             var parser = new DOMParser();
             var d = parser.parseFromString(data, "text/html");
-
-            // Use the parse function to remove invalid tags and attributes
             parse(d);
-
             var div = document.createElement('div');
             div.innerHTML = d.firstChild.innerHTML;
-
             return div;
         }
 
