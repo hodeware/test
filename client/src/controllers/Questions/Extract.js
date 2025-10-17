@@ -1,5 +1,6 @@
 import jSuites from "jsuites";
 import jEditor from '../../utils/editor/editor.js';
+import { renderContent, stripHTML, typesetMath } from '../../utils/questionRenderer.js';
 
 export default function Extract() {
     let self = this;
@@ -108,6 +109,9 @@ export default function Extract() {
                     // Pretty print the JSON
                     outputElement.value = JSON.stringify(result.data, null, 2);
 
+                    // Render preview
+                    self.renderPreview(result.data);
+
                     // Show token usage
                     const usageElement = self.el.querySelector('[data-usage]');
                     if (result.usage && usageElement) {
@@ -156,7 +160,62 @@ export default function Extract() {
             }
             self.el.querySelector('[data-json-output]').value = '';
             self.el.querySelector('[data-usage]').classList.add('hidden');
+
+            // Clear preview
+            const previewContainer = self.el.querySelector('[data-preview]');
+            previewContainer.innerHTML = '';
+            previewContainer.classList.add('hidden');
         }
+    }
+
+    // Preview rendering functions (reused from Render.js)
+    self.renderPreview = function(questionData) {
+        const previewContainer = self.el.querySelector('[data-preview]');
+        const previewContent = self.el.querySelector('[data-preview-content]');
+        const previewNumber = self.el.querySelector('[data-preview-number]');
+        const previewTitle = self.el.querySelector('[data-preview-title]');
+        const previewAnswers = self.el.querySelector('[data-preview-answers]');
+
+        // Show preview container
+        previewContainer.classList.remove('hidden');
+
+        // Set number and title
+        if (questionData.number) {
+            previewNumber.textContent = `${questionData.number}.`;
+        } else {
+            previewNumber.textContent = '';
+        }
+
+        // Render content with formulas
+        previewContent.innerHTML = renderContent(questionData.content, questionData.images || []);
+
+        // Render answers
+        previewAnswers.innerHTML = '';
+        if (questionData.answers && questionData.answers.length > 0) {
+            questionData.answers.forEach((answer) => {
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'py-2';
+
+                // Check if answer content has placeholders {{n}}
+                const hasPlaceholders = /\{\{\d+\}\}/.test(answer.content);
+                let answerContent = hasPlaceholders
+                    ? renderContent(answer.content, questionData.images || [])
+                    : answer.content;
+
+                // Replace &nbsp; with regular spaces
+                answerContent = answerContent.replace(/&nbsp;/g, ' ');
+
+                answerDiv.innerHTML = `
+                    <div>
+                        <strong>${answer.id.toUpperCase()}</strong>) ${answerContent}
+                    </div>
+                `;
+                previewAnswers.appendChild(answerDiv);
+            });
+        }
+
+        // Render LaTeX formulas with MathJax
+        typesetMath([previewContent, previewAnswers]);
     }
 
     return `<div class="bg-gray-50 min-h-screen py-6">
@@ -207,8 +266,24 @@ export default function Extract() {
                     </div>
                 </div>
 
-                <!-- Right Column: JSON Output -->
+                <!-- Right Column: Preview & JSON Output -->
                 <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
+                    <!-- Preview Section -->
+                    <div data-preview class="hidden mb-6 pb-6 border-b border-gray-200">
+                        <div class="mb-3">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-1">Preview</h2>
+                            <p class="text-sm text-gray-500">How the question will be rendered</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="mb-2">
+                                <span data-preview-number class="font-semibold"></span>
+                                <span data-preview-title class="font-semibold"></span>
+                            </div>
+                            <div data-preview-content class="mb-4 text-gray-800"></div>
+                            <div data-preview-answers class="space-y-1 text-gray-700"></div>
+                        </div>
+                    </div>
+
                     <div class="mb-4 flex items-center justify-between">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 mb-1">Structured Output</h2>
@@ -228,7 +303,7 @@ export default function Extract() {
                               readonly
                               placeholder='{\n  "title": "Question title",\n  "keywords": ["keyword1", "keyword2"],\n  "categories": [1, 2],\n  "content": "Question content with {{img_1}} placeholder",\n  "images": [...],\n  "answers": [...]\n}'
                               class="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 font-mono text-xs focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none resize-none"
-                              style="font-family: 'Courier New', monospace; min-height: 500px;"></textarea>
+                              style="font-family: 'Courier New', monospace; min-height: 350px;"></textarea>
 
                     <!-- Usage Info -->
                     <div data-usage class="hidden mt-4 text-sm text-gray-600 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">

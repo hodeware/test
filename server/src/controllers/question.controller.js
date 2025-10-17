@@ -76,7 +76,7 @@ async function parseQuestionContent(content, images) {
   const answerPattern = /\n\s*[a-e]\)\s*/i;
   const parts = processedContent.split(answerPattern);
 
-  let questionText = parts[0].trim().replace(/\s+/g, ' '); // Replace multiple spaces/newlines with single space
+  let questionText = parts[0].trim();
   const answerTexts = parts.slice(1);
 
   // Extract answer options and trim all whitespace
@@ -84,7 +84,7 @@ async function parseQuestionContent(content, images) {
   const answerLabels = ['a', 'b', 'c', 'd', 'e'];
 
   answerTexts.forEach((text, index) => {
-    const trimmedText = text.trim().replace(/\s+/g, ' '); // Replace multiple spaces/newlines with single space
+    const trimmedText = text.trim();
     if (trimmedText) {
       answers.push({
         id: answerLabels[index],
