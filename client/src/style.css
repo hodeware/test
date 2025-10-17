@@ -15,3 +15,40 @@
     @apply transition-all duration-150;
   }
 }
+
+
+.jsnippet-container {
+  display: flex;
+  margin-bottom: 10px;
+  user-select: none;
+}
+
+.jsnippet {
+  width: auto;
+  height: 50px;
+  margin: 2px;
+  overflow: hidden;
+}
+
+.jsnippet:after {
+  content: 'close';
+  font-family: 'Material icons';
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  cursor: pointer;
+  text-shadow: 0px 0px 2px #fff;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.jsnippet img {
+  width: 50px;
+}
+
+.jsnippet .jsnippet-title {
+  font-size: 11px;
+  display: none;
+}

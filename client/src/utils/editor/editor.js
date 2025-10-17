@@ -351,10 +351,14 @@ function Editor() {
                 return;
             }
 
+            let preview;
+
             if (data.result.substr(0,4) === 'data') {
                 ext = data.result.split(';')
                 ext = ext[0].split('/');
                 ext = ext[1];
+                data.type = ext;
+                preview = data.result;
             } else {
                 return;
             }
@@ -370,7 +374,7 @@ function Editor() {
 
             obj.appendSnippet({
                 title: data.name,
-                image: '/img/file-icon.png'
+                image: preview
             });
 
             change();
@@ -495,7 +499,10 @@ function Editor() {
                         // Check if is data
                         element.setAttribute('tabindex', '900');
                         // Check attributes for persistence
-                        obj.addImage(element.src);
+                        appendFile({
+                            result: element.src,
+                            size: element.length,
+                        });
                     }
                 }
                 // Remove attributes

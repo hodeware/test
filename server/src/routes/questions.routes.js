@@ -1,18 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {
-  extractQuestion,
-  getQuestions,
-  getQuestionById,
-  createQuestion
-} = require('../controllers/questions.controller');
+const multer = require('multer');
+const { extractQuestion } = require('../controllers/question.controller');
 
-// Question extraction route - POST with rich content
-router.post('/extract', extractQuestion);
+// Configure multer for form-data parsing (no file upload, just fields)
+const upload = multer();
 
-// CRUD routes (for future database integration)
-router.get('/', getQuestions);
-router.get('/:id', getQuestionById);
-router.post('/', createQuestion);
+// POST /api/questions/extract - Extract question from text content
+router.post('/extract', upload.none(), extractQuestion);
 
 module.exports = router;

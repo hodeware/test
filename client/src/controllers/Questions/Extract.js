@@ -32,6 +32,7 @@ export default function Extract() {
         }
 
         const data = editor.getData(true); // Get JSON format with files
+        const files = editor.getFiles(true);
         const outputElement = self.el.querySelector('[data-json-output]');
         const loadingElement = self.el.querySelector('[data-loading]');
         const extractButton = self.el.querySelector('[data-extract-button]');
@@ -41,14 +42,16 @@ export default function Extract() {
             return;
         }
 
+console.log(files)
+
         // Show loading state
         loadingElement.classList.remove('hidden');
         extractButton.disabled = true;
 
         // Prepare images from files (if any)
         const images = [];
-        if (data.files && data.files.length > 0) {
-            data.files.forEach(file => {
+        if (files && files.length > 0) {
+            files.forEach(file => {
                 images.push({
                     name: file.name,
                     data: file.data.split(',')[1], // Remove data:image/png;base64, prefix
@@ -59,17 +62,18 @@ export default function Extract() {
 
         const payload = {
             content: data.content,
-            images: images
+            images: images.length > 0 ? JSON.stringify(images) : undefined
         };
+
+        console.log('Editor data:', data);
+        console.log('Payload to send:', payload);
+        console.log('Content length:', data.content ? data.content.length : 0);
 
         jSuites.ajax({
             url: '/api/questions/extract',
             method: 'POST',
             dataType: 'json',
-            data: JSON.stringify(payload),
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            data: payload,
             success: function(result) {
                 loadingElement.classList.add('hidden');
                 extractButton.disabled = false;
