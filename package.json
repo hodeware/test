@@ -1,0 +1,30 @@
+{
+  "name": "fullstack-express-lemonadejs",
+  "version": "1.0.0",
+  "description": "Full-stack application with Express backend and LemonadeJS frontend",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "start:prod": "NODE_ENV=production cd server && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "express",
+    "lemonadejs",
+    "fullstack",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC"
+}
