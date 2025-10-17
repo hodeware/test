@@ -28,23 +28,30 @@ export default function Search() {
 
     self.onRowClick = function(instance, row, rowNumber, columnNumber) {
         const userId = self.data[rowNumber].id;
-        window.location.href = `/clients/edition?id=${userId}`;
+        window.location.href = `/users/edition?id=${userId}`;
     }
 
-    return `<div class="p20">
-        <div class="row" style="margin-bottom: 20px;">
-            <div class="column">
-                <h2>Users</h2>
-                <a href="/clients/edition" class="jbutton dark">Add New User</a>
+    return `<div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Users List</h2>
+                <p class="text-gray-600 mt-1">Manage and view all users in the system</p>
             </div>
+            <a href="/users/edition"
+               class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-colors duration-200 flex items-center space-x-2">
+                <span class="material-icons" style="font-size: 20px;">person_add</span>
+                <span>Add New User</span>
+            </a>
         </div>
-        <Datagrid
-            data="{{self.data}}"
-            columns="{{self.columns}}"
-            onclick="self.onRowClick"
-            onupdate="console.log('Data grid was updated')"
-            onchangepage="console.log('Data grid page changed')"
-            :pagination="10"
-            :ref="self.ref" />
+        <div class="overflow-x-auto">
+            <Datagrid
+                data="{{self.data}}"
+                columns="{{self.columns}}"
+                onclick="self.onRowClick"
+                onupdate="console.log('Data grid was updated')"
+                onchangepage="console.log('Data grid page changed')"
+                :pagination="10"
+                :ref="self.ref" />
+        </div>
     </div>`
 }

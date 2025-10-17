@@ -6,9 +6,9 @@ import "@lemonadejs/data-grid/dist/style.css";
 import "./style.css";
 
 import App from './App.js';
-import Header from './utils/Header';
+import Top from './utils/Top';
 import Menu from './utils/Menu';
 
-lemonade.setComponents({ Header, Menu });
+lemonade.setComponents({ Top, Menu });
 
 lemonade.render(App, document.getElementById('root'));

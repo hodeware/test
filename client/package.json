@@ -3,11 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@jsuites/css": "^1.5.0",
-    "@lemonadejs/data-grid": "^1.2.1",
-    "@lemonadejs/router": "^5.0.3",
+    "@lemonadejs/router": "^6.0.0",
     "jsuites": "^5.1.4",
-    "lemonadejs": "^4.3.3",
+    "lemonadejs": "^5.2.2",
     "mathjax-full": "^3.2.2",
     "tex-equation-to-svg": "^1.0.1",
     "tex2svg": "^1.0.2"
