@@ -18,10 +18,19 @@ const webpack = {
         rules: [
             {
                 test: /\.css$/,
+                exclude: /node_modules/,
                 use: [
                     isProduction ? MiniCssExtractPlugin.loader : "style-loader",
                     "css-loader",
                     "postcss-loader"
+                ],
+            },
+            {
+                test: /\.css$/,
+                include: /node_modules/,
+                use: [
+                    isProduction ? MiniCssExtractPlugin.loader : "style-loader",
+                    "css-loader"
                 ],
             }
         ],

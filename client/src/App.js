@@ -7,16 +7,16 @@ export default function App() {
     }
 
     return render => (render)`<>
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-50">
             <Top/>
-            <div class="container mx-auto px-6 py-8">
+            <main class="container mx-auto px-6 py-8">
                 <Router @ref="self.router">
                     <Route path="/users/search" controller="${UsersSearch}" />
                     <Route path="/users/(.*)" controller="${UsersEdition}" />
                     <Route path="/questions/extract" controller="${QuestionsExtract}" />
                     <Route path="(.*)" controller="${error}" />
                 </Router>
-            </div>
+            </main>
         </div>
     </>`;
 }

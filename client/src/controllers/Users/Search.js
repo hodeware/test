@@ -31,19 +31,19 @@ export default function Search() {
         window.location.href = `/users/edition?id=${userId}`;
     }
 
-    return `<div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between mb-6">
+    return `<div class="bg-white rounded-xl border border-gray-200 p-8">
+        <div class="flex items-center justify-between mb-8">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Users List</h2>
-                <p class="text-gray-600 mt-1">Manage and view all users in the system</p>
+                <h2 class="text-2xl font-semibold text-gray-900">Users</h2>
+                <p class="text-gray-500 text-sm mt-1">Manage your team members and their account permissions</p>
             </div>
             <a href="/users/edition"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-colors duration-200 flex items-center space-x-2">
-                <span class="material-icons" style="font-size: 20px;">person_add</span>
-                <span>Add New User</span>
+               class="bg-black hover:bg-gray-800 text-white font-medium px-5 py-2.5 rounded-lg transition-colors duration-150 flex items-center space-x-2">
+                <span class="material-icons" style="font-size: 18px;">add</span>
+                <span>Add user</span>
             </a>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto -mx-8 px-8">
             <Datagrid
                 data="{{self.data}}"
                 columns="{{self.columns}}"

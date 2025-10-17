@@ -1,16 +1,16 @@
 export default function Top() {
     return render => render`
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+        <header class="bg-white border-b border-gray-200">
             <div class="container mx-auto px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <span class="material-icons" style="font-size: 32px;">group</span>
-                        <h1 class="text-2xl font-bold">User Management</h1>
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons text-gray-800" style="font-size: 28px;">apps</span>
+                        <h1 class="text-xl font-semibold text-gray-900">Management</h1>
                     </div>
                     <nav>
                         <Menu />
                     </nav>
                 </div>
             </div>
-        </div>`;
+        </header>`;
 }
