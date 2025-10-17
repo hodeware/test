@@ -1,0 +1,74 @@
+{
+  "number": "71",
+  "type": "multiple",
+  "title": "(VUNESP) Seja &nbsp;a raiz do polinômio real &nbsp;",
+  "keywords": [
+    "vunesp",
+    "polinômio",
+    "determine",
+    "resto",
+    "divisão"
+  ],
+  "categories": [],
+  "content": "(VUNESP) Seja {{0}}&nbsp;a raiz do polinômio real {{1}}&nbsp;. Determine o resto da divisão de {{2}}&nbsp;por {{3}}.",
+  "images": [
+    {
+      "id": "formula_0",
+      "latex": "m",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_1",
+      "latex": "P(x) = x^6 - (m + 1)x^5 + 32",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_2",
+      "latex": "P(x)",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_3",
+      "latex": "x-1",
+      "type": "formula",
+      "svg": null
+    }
+  ],
+  "answers": [
+    {
+      "id": "a",
+      "content": "10",
+      "correct": false
+    },
+    {
+      "id": "b",
+      "content": "21",
+      "correct": false
+    },
+    {
+      "id": "c",
+      "content": "30",
+      "correct": false
+    },
+    {
+      "id": "d",
+      "content": "31",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "64",
+      "correct": false
+    }
+  ],
+  "metadata": {
+    "hasImages": true,
+    "hasFormulas": true,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}

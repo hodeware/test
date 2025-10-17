@@ -7,9 +7,13 @@ const path = require('path');
 
 const apiRoutes = require('./routes/api.routes');
 const { errorHandler } = require('./middleware/errorHandler');
+const { connectDB } = require('./config/database');
 
 // Load environment variables
 dotenv.config();
+
+// Connect to SQLite database
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

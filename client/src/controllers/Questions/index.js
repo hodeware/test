@@ -1,3 +1,4 @@
 import QuestionsExtract from './Extract.js';
+import QuestionsRender from './Render.js';
 
-export { QuestionsExtract };
+export { QuestionsExtract, QuestionsRender };

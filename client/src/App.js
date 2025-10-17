@@ -1,5 +1,5 @@
 import { UsersEdition, UsersSearch } from './controllers/Users';
-import { QuestionsExtract } from './controllers/Questions';
+import { QuestionsExtract, QuestionsRender } from './controllers/Questions';
 import error from './utils/error.js'
 
 export default function App() {
@@ -14,6 +14,7 @@ export default function App() {
                     <Route path="/users/search" controller="${UsersSearch}" />
                     <Route path="/users/(.*)" controller="${UsersEdition}" />
                     <Route path="/questions/extract" controller="${QuestionsExtract}" />
+                    <Route path="/questions/render/(.*)" controller="${QuestionsRender}" />
                     <Route path="(.*)" controller="${error}" />
                 </Router>
             </main>
