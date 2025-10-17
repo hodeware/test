@@ -53,7 +53,15 @@
   display: none;
 }
 
-.MathJax {
+mjx-container[jax="SVG"] > svg {
   display: inline-block;
-  zoom: 0.8;
+}
+
+[data-answers] > div {
+  padding: 10px;
+}
+
+[data-content] {
+  padding: 10px;
+  margin-bottom: 10px;
 }

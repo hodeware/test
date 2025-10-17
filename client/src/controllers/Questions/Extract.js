@@ -95,10 +95,6 @@ export default function Extract() {
             images: images.length > 0 ? JSON.stringify(images) : undefined
         };
 
-        console.log('Editor data:', data);
-        console.log('Payload to send:', payload);
-        console.log('Content length:', data.content ? data.content.length : 0);
-
         jSuites.ajax({
             url: '/api/questions/extract',
             method: 'POST',

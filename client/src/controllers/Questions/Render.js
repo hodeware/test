@@ -53,25 +53,47 @@ export default function Render() {
     }
 
     const renderQuestion = () => {
+        const answersContainer = self.el.querySelector('[data-answers]');
+
         this.number = questionData.number;
         this.title = stripHTML(questionData.title);
 
         // Render content with formulas
         this.content.innerHTML = renderContent(questionData.content, questionData.images);
 
-        // Create answers array for LemonadeJS loop
-        this.answers = questionData.answers.map((answer) => {
-            return {
-                id: answer.id.toUpperCase(),
-                content: renderContent(answer.content, questionData.images),
-                correct: answer.correct
-            };
+        // Render answers
+        answersContainer.innerHTML = '';
+        questionData.answers.forEach((answer) => {
+            const answerDiv = document.createElement('div');
+            // Check if answer content has placeholders {{n}}
+            const hasPlaceholders = /\{\{\d+\}\}/.test(answer.content);
+            let answerContent = hasPlaceholders
+                ? renderContent(answer.content, questionData.images)
+                : answer.content;
+
+            // Replace &nbsp; with regular spaces
+            answerContent = answerContent.replace(/&nbsp;/g, ' ');
+
+            answerDiv.innerHTML = `
+                <div>
+                    <div>
+                        ${answer.id.toUpperCase()}) ${answerContent}
+                    </div>
+                </div>
+            `;
+            answersContainer.appendChild(answerDiv);
         });
 
         // Render LaTeX formulas with MathJax
-        if (window.MathJax) {
-            window.MathJax.typesetPromise([self.el])
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([this.content, answersContainer])
                 .catch((err) => console.error('MathJax rendering error:', err));
+        } else if (window.MathJax) {
+            // Wait for MathJax to be ready
+            window.MathJax.startup.promise.then(() => {
+                window.MathJax.typesetPromise([this.content, answersContainer])
+                    .catch((err) => console.error('MathJax rendering error:', err));
+            });
         }
     }
 
@@ -80,27 +102,40 @@ export default function Render() {
 
         // Create a map of image IDs to image data
         const imageMap = {};
-        images.forEach(img => {
-            imageMap[img.id] = img;
-        });
+        if (images && images.length > 0) {
+            images.forEach(img => {
+                imageMap[img.id] = img;
+            });
+        }
 
         // Replace placeholders with actual content
         rendered = rendered.replace(/\{\{(\d+)\}\}/g, (match, index) => {
             const imgId = `formula_${index}`;
             const img = imageMap[imgId] || imageMap[`img_${index}`];
 
-            if (!img) return match;
+            if (!img) {
+                console.warn('No image found for placeholder:', match, 'looking for:', imgId);
+                return match;
+            }
 
             if (img.type === 'formula') {
                 // Render as LaTeX using MathJax delimiters
-                return `\\(${img.latex}\\)`;
+                const latex = `\\(${img.latex}\\)`;
+                return latex;
             } else if (img.type === 'image') {
                 // Render as image
-                return `<img src="data:${img.mediaType};base64,${img.data}" alt="${img.name}" class="inline-block max-w-full h-auto" />`;
+                return `<img src="data:${img.mediaType};base64,${img.data}" alt="${img.name}" class="max-w-full h-auto" />`;
             }
 
             return match;
         });
+
+        // Convert newlines to <br> tags
+        rendered = rendered.replace(/\n/g, '<br>');
+        // Convert \r\n to <br> tags
+        rendered = rendered.replace(/\r\n/g, '<br>');
+        // Clean up multiple <br> tags
+        rendered = rendered.replace(/(<br>){2,}/g, '<br><br>');
 
         return rendered;
     }
@@ -116,9 +151,7 @@ export default function Render() {
         <div data-error class="hidden"></div>
         <div data-content class="hidden">
             <div><span>${this.number}.</span> <span :ref="this.content"></span></div>
-            <ul :loop="this.answers">
-                <li><span>{{self.id}})</span> <span>{{self.content}}</span></li>
-            </ul>
         </div>
+        <div data-answers></div>
     </div>`;
 }

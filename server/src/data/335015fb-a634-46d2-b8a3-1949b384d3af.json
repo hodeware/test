@@ -1,0 +1,90 @@
+{
+  "number": "72",
+  "title": "Questão 72: O resto e o quociente da divisão de &nbsp;por , são respe...",
+  "keywords": [
+    "resto",
+    "quociente",
+    "divisão",
+    "respectivamente"
+  ],
+  "categories": [],
+  "content": "O resto e o quociente da divisão de {{0}}&nbsp;por {{1}}, são respectivamente",
+  "images": [
+    {
+      "id": "formula_0",
+      "latex": "2x^4 - 3x^3 - 2x^2 + 6x - 3",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_1",
+      "latex": "2x + 1",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_2",
+      "latex": "\\frac{5}{2}e^{x^4-x^3-x^2+6x-3}",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_3",
+      "latex": "-\\frac{1}{2}e^{2x^2-x^2+6x-3}",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_4",
+      "latex": "-\\frac{3}{2}x^3+x^2+\\frac{3}{2}x-\\frac{9}{4}",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_5",
+      "latex": "-\\frac{3}{4}ex^3-x^2-\\frac{3}{2}x+\\frac{9}{4}",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_6",
+      "latex": "-\\frac{1}{2}e^{x^3+x^2}-\\frac{3}{2}x-9",
+      "type": "formula",
+      "svg": null
+    }
+  ],
+  "answers": [
+    {
+      "id": "a",
+      "content": "&nbsp;&nbsp; {{2}}",
+      "correct": false
+    },
+    {
+      "id": "b",
+      "content": "&nbsp;&nbsp; {{3}}",
+      "correct": false
+    },
+    {
+      "id": "c",
+      "content": "&nbsp;&nbsp;&nbsp; {{4}}",
+      "correct": false
+    },
+    {
+      "id": "d",
+      "content": "&nbsp;&nbsp;&nbsp; {{5}}",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "&nbsp;&nbsp;&nbsp; {{6}}",
+      "correct": false
+    }
+  ],
+  "metadata": {
+    "hasImages": true,
+    "hasFormulas": true,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}
