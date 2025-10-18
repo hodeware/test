@@ -26,8 +26,8 @@ const extractQuestion = async (req, res, next) => {
       imagesAnalyzed: apiUsage.images_analyzed || 0
     };
 
-    // Generate resolution if requested
-    if (generateResolution && process.env.ANTHROPIC_API_KEY) {
+    // Always generate resolution automatically
+    if (process.env.ANTHROPIC_API_KEY) {
       try {
         const resolutionResult = await generateQuestionResolution(parsedQuestion, images);
         parsedQuestion.resolution = resolutionResult.resolution;
@@ -39,9 +39,11 @@ const extractQuestion = async (req, res, next) => {
       } catch (error) {
         console.error('Failed to generate resolution:', error.message);
         parsedQuestion.resolution = null;
+        parsedQuestion.correctAnswer = null;
       }
     } else {
       parsedQuestion.resolution = null;
+      parsedQuestion.correctAnswer = null;
     }
 
     res.status(200).json({
