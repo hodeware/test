@@ -1,0 +1,48 @@
+{
+  "number": "74",
+  "title": "Questão 74: Propriedades de raízes complexas em polinômios de grau ímpar com coeficientes reais",
+  "keywords": [
+    "polinômio",
+    "coeficientes",
+    "reais",
+    "soluções",
+    "números"
+  ],
+  "categories": [],
+  "content": "Em um polinômio de grau 5 e coeficientes reais, onde nem todas as soluções são números reais, é correto afirmar:",
+  "images": [],
+  "answers": [
+    {
+      "id": "a",
+      "content": "O polinômio possui exatamente cinco raízes reais, pois esse é o número igual ao grau do polinômio.",
+      "correct": false
+    },
+    {
+      "id": "b",
+      "content": "O polinômio pode ter no máximo duas raízes complexas, já que as demais precisam ser reais.",
+      "correct": false
+    },
+    {
+      "id": "c",
+      "content": "Todo polinômio de grau ímpar possui pelo menos uma raiz real.",
+      "correct": true
+    },
+    {
+      "id": "d",
+      "content": "Se o polinômio tiver uma raiz complexa, as demais também serão complexas.",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "Polinômios de grau ímpar com coeficientes reais não admitem raízes imaginárias.",
+      "correct": false
+    }
+  ],
+  "metadata": {
+    "hasImages": false,
+    "hasFormulas": false,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}

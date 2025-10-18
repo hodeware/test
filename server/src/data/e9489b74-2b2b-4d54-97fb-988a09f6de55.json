@@ -1,0 +1,67 @@
+{
+  "number": "70",
+  "title": "Questão 70: Determinação de polinômio através de condições dadas e cálculo de valor específico",
+  "keywords": [
+    "fuvest",
+    "polinômio",
+    "satisfaz",
+    "seguintes",
+    "condições"
+  ],
+  "categories": [],
+  "content": "(FUVEST) Um polinômio {{0}}&nbsp;satisfaz as seguintes condições:\n \n{{1}};\n \n{{2}}, qualquer que seja x real.\n \nQual o valor de P(2)?",
+  "images": [
+    {
+      "id": "formula_0",
+      "latex": "P(x) = x^3 + ax^2 + bx + c",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_1",
+      "latex": "P(I) = 0",
+      "type": "formula",
+      "svg": null
+    },
+    {
+      "id": "formula_2",
+      "latex": "P(-x) + P(x) = 0",
+      "type": "formula",
+      "svg": null
+    }
+  ],
+  "answers": [
+    {
+      "id": "a",
+      "content": "2",
+      "correct": true
+    },
+    {
+      "id": "b",
+      "content": "3",
+      "correct": false
+    },
+    {
+      "id": "c",
+      "content": "4",
+      "correct": false
+    },
+    {
+      "id": "d",
+      "content": "5",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "6",
+      "correct": false
+    }
+  ],
+  "metadata": {
+    "hasImages": true,
+    "hasFormulas": true,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}

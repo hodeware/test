@@ -1,0 +1,48 @@
+{
+  "number": "12",
+  "title": "Questão 12: Classificação de orações em período composto",
+  "keywords": [
+    "trecho",
+    "seguir",
+    "professores",
+    "explicaram",
+    "conteúdo"
+  ],
+  "categories": [],
+  "content": "Leia o trecho a seguir:\n \n\"Os professores explicaram o conteúdo com clareza, e os alunos fizeram várias perguntas, porque desejavam compreender melhor a matéria.\"\n \nAssinale a alternativa correta sobre a classificação das orações:",
+  "images": [],
+  "answers": [
+    {
+      "id": "a",
+      "content": "“Os professores explicaram o conteúdo com clareza” é oração subordinada substantiva objetiva direta.",
+      "correct": false
+    },
+    {
+      "id": "b",
+      "content": "“E os alunos fizeram várias perguntas” é uma oração coordenada sindética aditiva.",
+      "correct": true
+    },
+    {
+      "id": "c",
+      "content": "“Porque desejavam compreender melhor a matéria” é uma oração coordenada explicativa.",
+      "correct": false
+    },
+    {
+      "id": "d",
+      "content": "Todas as orações são coordenadas.",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "Não há oração subordinada no período.",
+      "correct": false
+    }
+  ],
+  "metadata": {
+    "hasImages": false,
+    "hasFormulas": false,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}

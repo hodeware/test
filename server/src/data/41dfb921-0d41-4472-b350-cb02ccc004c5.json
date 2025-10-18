@@ -1,0 +1,55 @@
+{
+  "number": "77",
+  "title": "Questão 77: Soma de elementos específicos em matriz",
+  "keywords": [
+    "analise",
+    "matriz",
+    "seguir",
+    "termos",
+    "igual"
+  ],
+  "categories": [],
+  "content": "Analise a matriz a seguir:\n \n{{0}}\r\n\n\r\n\n\n \nA soma dos termos a22 e a32 é igual a:",
+  "images": [
+    {
+      "id": "formula_0",
+      "latex": "\\begin{pmatrix} 1 & 5 & 1 \\\\ 3 & 4 & 0 \\\\ 1 & -2 & -3 \\end{pmatrix}",
+      "type": "formula",
+      "svg": null
+    }
+  ],
+  "answers": [
+    {
+      "id": "a",
+      "content": "-1",
+      "correct": false
+    },
+    {
+      "id": "b",
+      "content": "-2",
+      "correct": false
+    },
+    {
+      "id": "c",
+      "content": "0",
+      "correct": false
+    },
+    {
+      "id": "d",
+      "content": "1",
+      "correct": false
+    },
+    {
+      "id": "e",
+      "content": "2",
+      "correct": true
+    }
+  ],
+  "metadata": {
+    "hasImages": true,
+    "hasFormulas": true,
+    "answerCount": 5,
+    "difficulty": null,
+    "source": null
+  }
+}
