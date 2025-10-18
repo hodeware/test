@@ -28,8 +28,10 @@ export const renderContent = function(content, images) {
             const latex = `\\(${img.latex}\\)`;
             return latex;
         } else if (img.type === 'image') {
-            // Render as image
-            return `<img src="data:${img.mediaType};base64,${img.data}" alt="${img.name}" class="max-w-full h-auto" />`;
+            // Render as base64 image
+            if (img.data) {
+                return `<img src="data:${img.mediaType};base64,${img.data}" alt="${img.name}" class="max-w-full h-auto" />`;
+            }
         }
 
         return match;
