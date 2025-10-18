@@ -14,6 +14,11 @@ export const renderContent = function(content, images) {
         });
     }
 
+    // Convert newlines to <br> tags (handle \r\n first, then \n)
+    rendered = rendered.replace(/\r\n/g, '<br>');
+    rendered = rendered.replace(/\n/g, '<br>');
+    rendered = rendered.replace(/\r/g, '<br>');
+
     // Replace placeholders with actual content
     rendered = rendered.replace(/\{\{(\d+)\}\}/g, (match, index) => {
         const imgId = `formula_${index}`;
@@ -28,19 +33,19 @@ export const renderContent = function(content, images) {
             const latex = `\\(${img.latex}\\)`;
             return latex;
         } else if (img.type === 'image') {
-            // Render as base64 image
-            if (img.data) {
+            // Prioritize SVG if available, otherwise use base64
+            if (img.svg) {
+                console.log(img)
+                // Render SVG directly (already contains <svg> tags)
+                return img.svg;
+            } else if (img.data) {
+                // Fallback to base64 image
                 return `<img src="data:${img.mediaType};base64,${img.data}" alt="${img.name}" class="max-w-full h-auto" />`;
             }
         }
 
         return match;
     });
-
-    // Convert newlines to <br> tags (handle \r\n first, then \n)
-    rendered = rendered.replace(/\r\n/g, '<br>');
-    rendered = rendered.replace(/\n/g, '<br>');
-    rendered = rendered.replace(/\r/g, '<br>');
 
     return rendered;
 }
