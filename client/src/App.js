@@ -1,4 +1,3 @@
-import { UsersEdition, UsersSearch } from './controllers/Users';
 import { QuestionsExtract, QuestionsRender } from './controllers/Questions';
 import error from './utils/error.js'
 
@@ -11,8 +10,6 @@ export default function App() {
             <Top/>
             <main class="container mx-auto px-6 py-8">
                 <Router @ref="self.router">
-                    <Route path="/users/search" controller="${UsersSearch}" />
-                    <Route path="/users/(.*)" controller="${UsersEdition}" />
                     <Route path="/questions/extract" controller="${QuestionsExtract}" />
                     <Route path="/questions/render/(.*)" controller="${QuestionsRender}" />
                     <Route path="(.*)" controller="${error}" />

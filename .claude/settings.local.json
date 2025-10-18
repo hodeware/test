@@ -5,7 +5,16 @@
       "Bash(npm run build:*)",
       "Bash(npm install:*)",
       "Bash(where:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run start:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm start)",
+      "Bash(Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty OwningProcess)",
+      "Bash(cmd //c \"netstat -ano | findstr :3000\")",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

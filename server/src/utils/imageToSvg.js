@@ -9,6 +9,14 @@ const potrace = require('potrace');
 async function imageToSvg(base64Data, mediaType) {
   return new Promise((resolve, reject) => {
     try {
+      // Validate inputs
+      if (!base64Data) {
+        return reject(new Error('base64Data is required'));
+      }
+      if (!mediaType) {
+        return reject(new Error('mediaType is required'));
+      }
+
       // Convert base64 to buffer
       const imageBuffer = Buffer.from(base64Data, 'base64');
 

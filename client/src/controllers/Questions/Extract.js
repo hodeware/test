@@ -6,6 +6,7 @@ import { showToast } from '../../utils/toast.js';
 export default function Extract() {
     let self = this;
     let editor = null;
+    let useClaudeExtraction = false; // Track if using Claude-based extraction
 
     self.onload = function() {
         // Initialize jEditor
@@ -24,6 +25,25 @@ export default function Extract() {
                 dropAsSnippet: false,
                 parseHTML: true,
             });
+        }
+
+        // Initialize switch state
+        self.toggleInstructionsVisibility();
+    }
+
+    self.toggleClaudeExtraction = function(event) {
+        useClaudeExtraction = event.target.checked;
+        self.toggleInstructionsVisibility();
+    }
+
+    self.toggleInstructionsVisibility = function() {
+        const instructionsContainer = self.el.querySelector('[data-instructions-container]');
+        if (instructionsContainer) {
+            if (useClaudeExtraction) {
+                instructionsContainer.classList.remove('hidden');
+            } else {
+                instructionsContainer.classList.add('hidden');
+            }
         }
     }
 
@@ -87,12 +107,23 @@ export default function Extract() {
             });
         }
 
+        // Get custom instructions if using Claude extraction
+        const customInstructions = useClaudeExtraction
+            ? (self.el.querySelector('[data-custom-instructions]')?.value || '')
+            : '';
+
         const payload = {
             content: data.content,
-            images: images.length > 0 ? images : undefined
+            images: images.length > 0 ? images : undefined,
+            customInstructions: customInstructions
         };
 
-        fetch('/api/questions/extract', {
+        // Choose endpoint based on extraction mode
+        const endpoint = useClaudeExtraction
+            ? '/api/questions/extract-with-model'
+            : '/api/questions/extract';
+
+        fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -101,7 +132,11 @@ export default function Extract() {
         })
         .then(response => {
             if (!response.ok) {
-                return response.json().then(err => { throw err; });
+                return response.json().catch(() => {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }).then(err => {
+                    throw new Error(err.message || 'Server error');
+                });
             }
             return response.json();
         })
@@ -119,22 +154,29 @@ export default function Extract() {
                 // Show token usage
                 const usageElement = self.el.querySelector('[data-usage]');
                 if (result.usage && usageElement) {
-                    usageElement.textContent = `Tokens used: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out`;
+                    const mode = useClaudeExtraction ? 'Claude AI' : 'Regex';
+                    usageElement.textContent = `Mode: ${mode} | Tokens used: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out`;
                     usageElement.classList.remove('hidden');
                 }
+
+                showToast('Question extracted successfully!', 'success');
             } else {
-                alert('Error: ' + result.message);
-                outputElement.value = JSON.stringify({ error: result.message }, null, 2);
+                const errorMsg = result.message || 'Unknown error';
+                showToast('Error: ' + errorMsg, 'error', 5000);
+                outputElement.value = JSON.stringify({ error: errorMsg }, null, 2);
             }
         })
         .catch(error => {
             loadingElement.classList.add('hidden');
             extractButton.disabled = false;
-            alert('Failed to extract question');
-            console.error(error);
+
+            const errorMsg = error.message || 'Failed to extract question';
+            showToast('Failed to extract: ' + errorMsg, 'error', 5000);
+            console.error('Extraction error:', error);
 
             outputElement.value = JSON.stringify({
-                error: error.message || 'Failed to extract question'
+                error: errorMsg,
+                details: error.stack || 'No additional details'
             }, null, 2);
         });
     }
@@ -316,6 +358,31 @@ export default function Extract() {
                     <div class="flex-1">
                         <div data-editor class="border border-gray-300 rounded-lg overflow-hidden"></div>
                         <p class="text-xs text-gray-500 mt-2">Drag and drop images or paste content directly. Supports rich text, formulas, and diagrams.</p>
+
+                        <!-- Extraction Mode Switch -->
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox"
+                                       data-claude-switch
+                                       onchange="self.toggleClaudeExtraction(event)"
+                                       class="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                <div class="flex-1">
+                                    <span class="font-medium text-gray-900">Use Claude AI to Extract</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">More accurate parsing for complex formats</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Custom Instructions (shown when Claude extraction is enabled) -->
+                        <div data-instructions-container class="hidden mt-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Custom Instructions for Claude
+                            </label>
+                            <textarea data-custom-instructions
+                                      placeholder="Optional: Add specific instructions for how Claude should parse this content (e.g., 'This question has 6 answer options instead of 5', 'Pay special attention to chemical formulas', etc.)"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                                      rows="3"></textarea>
+                        </div>
 
                         <!-- Action Buttons -->
                         <div class="flex items-center space-x-3 mt-4">

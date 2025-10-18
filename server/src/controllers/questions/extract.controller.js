@@ -5,6 +5,7 @@ const extractQuestion = async (req, res, next) => {
   try {
     const content = req.body.content;
     const images = req.body.images || [];
+    const generateResolution = req.body.generateResolution || false;
 
     if (!content || !content.trim()) {
       return res.status(400).json({
@@ -24,6 +25,24 @@ const extractQuestion = async (req, res, next) => {
       outputTokens: apiUsage.output_tokens || 0,
       imagesAnalyzed: apiUsage.images_analyzed || 0
     };
+
+    // Generate resolution if requested
+    if (generateResolution && process.env.ANTHROPIC_API_KEY) {
+      try {
+        const resolutionResult = await generateQuestionResolution(parsedQuestion, images);
+        parsedQuestion.resolution = resolutionResult.resolution;
+        parsedQuestion.correctAnswer = resolutionResult.correctAnswer;
+
+        // Update usage stats
+        usage.inputTokens += resolutionResult.usage.input_tokens || 0;
+        usage.outputTokens += resolutionResult.usage.output_tokens || 0;
+      } catch (error) {
+        console.error('Failed to generate resolution:', error.message);
+        parsedQuestion.resolution = null;
+      }
+    } else {
+      parsedQuestion.resolution = null;
+    }
 
     res.status(200).json({
       success: true,
@@ -72,26 +91,57 @@ async function parseQuestionContent(content, images) {
   processedContent = advancedTrim(processedContent);
 
   // Split content into main question and answers
-  const answerPattern = /\n\s*[a-e]\)\s*/i;
-  const parts = processedContent.split(answerPattern);
+  // Match answer patterns that start at beginning of line or after newline
+  // This prevents matching things like "(QUIMICA)" in the middle of text
+  // Pattern explanation:
+  // (?:^|\n) - match start of string OR newline
+  // \s* - optional whitespace
+  // [a-eA-E] - match letters a-e (case insensitive)
+  // [\.\)] - match either . or )
+  // \s+ - require at least one whitespace after the marker
+  const regex = /(?:^|\n)\s*([a-eA-E])([\.\)])\s+/g;
 
-  let questionText = advancedTrim(parts[0]);
-  const answerTexts = parts.slice(1);
+  // Find all answer markers manually to be more precise
+  const answerMarkers = [];
+  let match;
 
-  // Extract answer options and trim all whitespace
-  const answers = [];
-  const answerLabels = ['a', 'b', 'c', 'd', 'e'];
-
-  answerTexts.forEach((text, index) => {
-    const trimmedText = advancedTrim(text);
-    if (trimmedText) {
-      answers.push({
-        id: answerLabels[index],
-        content: trimmedText,
-        correct: false // Will need to be marked manually or via AI
+  while ((match = regex.exec(processedContent)) !== null) {
+    const letter = match[1].toLowerCase();
+    // Only accept a-e in order to avoid false matches
+    if (['a', 'b', 'c', 'd', 'e'].includes(letter)) {
+      answerMarkers.push({
+        index: match.index,
+        fullMatch: match[0],
+        label: letter
       });
     }
-  });
+  }
+
+  let questionText;
+  const answers = [];
+
+  if (answerMarkers.length > 0) {
+    // Question text is everything before the first answer
+    questionText = advancedTrim(processedContent.substring(0, answerMarkers[0].index));
+
+    // Extract each answer
+    answerMarkers.forEach((marker, idx) => {
+      const startPos = marker.index + marker.fullMatch.length;
+      const endPos = idx < answerMarkers.length - 1 ? answerMarkers[idx + 1].index : processedContent.length;
+      const answerText = advancedTrim(processedContent.substring(startPos, endPos));
+
+      if (answerText) {
+        answers.push({
+          id: marker.label,
+          content: answerText,
+          correct: false // Will need to be marked manually or via AI
+        });
+      }
+    });
+  } else {
+    // No answers found, entire content is the question
+    questionText = processedContent;
+  }
 
   // Process images - analyze each one with Claude to detect formulas
   // The placeholders {{0}}, {{1}}, {{2}} are already in the content from the editor
@@ -100,17 +150,30 @@ async function parseQuestionContent(content, images) {
   let totalOutputTokens = 0;
   let imagesAnalyzed = 0;
 
+  const { imageToSvg } = require('../../utils/imageToSvg');
+
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
 
-    // Use Claude to analyze if this image contains a mathematical formula
-    const analysis = await analyzeImageWithClaude(img.data, img.mediaType);
+    // Skip if image data is invalid
+    if (!img || !img.data || !img.mediaType) {
+      console.log(`Skipping image ${i}: missing data or mediaType`);
+      continue;
+    }
 
-    // Track usage
-    if (analysis.usage) {
-      totalInputTokens += analysis.usage.input_tokens || 0;
-      totalOutputTokens += analysis.usage.output_tokens || 0;
-      imagesAnalyzed++;
+    // Use Claude to analyze if this image contains a mathematical formula
+    let analysis = { isFormula: false };
+    try {
+      analysis = await analyzeImageWithClaude(img.data, img.mediaType);
+
+      // Track usage
+      if (analysis.usage) {
+        totalInputTokens += analysis.usage.input_tokens || 0;
+        totalOutputTokens += analysis.usage.output_tokens || 0;
+        imagesAnalyzed++;
+      }
+    } catch (error) {
+      console.log(`Failed to analyze image ${i} with Claude:`, error.message);
     }
 
     if (analysis.isFormula && analysis.latex) {
@@ -122,13 +185,23 @@ async function parseQuestionContent(content, images) {
         svg: null // Will be generated on frontend using MathJax
       });
     } else {
-      // Regular image - store as base64
+      // Regular image - try to convert to SVG
+      let svgData = null;
+
+      try {
+        svgData = await imageToSvg(img.data, img.mediaType);
+      } catch (error) {
+        console.log(`Failed to convert image ${i} to SVG, storing as base64:`, error.message);
+      }
+
+      // Store image with both base64 and SVG (if conversion succeeded)
       processedImages.push({
         id: `img_${i}`,
         name: img.name || `image_${i}`,
         data: img.data,
         mediaType: img.mediaType || 'image/png',
-        type: 'image'
+        type: 'image',
+        svg: svgData // SVG version if conversion succeeded, null otherwise
       });
     }
   }
@@ -291,6 +364,111 @@ function generateTitle(text, questionNumber) {
   }
 
   return title;
+}
+
+/**
+ * Generate a detailed resolution for a question using Claude AI
+ */
+async function generateQuestionResolution(question, images) {
+  const Anthropic = require('@anthropic-ai/sdk');
+
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  // Build the content array for Claude
+  const messageContent = [];
+
+  // Add images if present (only actual images, not formulas)
+  if (images && images.length > 0) {
+    images.forEach(img => {
+      if (img.type === 'image' && img.data && img.mediaType) {
+        messageContent.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: img.mediaType,
+            data: img.data,
+          },
+        });
+      }
+    });
+  }
+
+  // Build the prompt
+  let prompt = `You are an expert educator and problem solver.
+Your task is to provide a detailed, step-by-step resolution for this educational question.
+
+**Question Content**:
+${question.content}
+
+**Answer Options**:
+${question.answers ? question.answers.map(a => `${a.id}) ${a.content}`).join('\n') : 'No answers provided'}
+
+**Your Task**:
+1. Analyze the question carefully
+2. Identify the correct answer (a, b, c, d, or e)
+3. Provide a detailed, educational explanation with:
+   - Step-by-step reasoning
+   - Key concepts involved
+   - Why the correct answer is right
+   - Why other answers are wrong (if relevant)
+   - Tips or insights that would help a student understand
+
+Write your explanation in a clear, educational manner. Use markdown formatting for better readability.
+
+Respond with a JSON object in this exact format:
+{
+  "correctAnswer": "a",
+  "resolution": "Detailed step-by-step explanation here. Use markdown formatting.\\n\\n## Step 1\\nExplanation...\\n\\n## Step 2\\nMore explanation..."
+}
+
+Only respond with the JSON object, nothing else.`;
+
+  messageContent.push({
+    type: "text",
+    text: prompt
+  });
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      messages: [
+        {
+          role: "user",
+          content: messageContent,
+        }
+      ],
+    });
+
+    // Parse Claude's response
+    const responseText = message.content[0].text.trim();
+
+    // Try to parse JSON, handling potential markdown code blocks
+    let jsonText = responseText;
+    if (responseText.includes('```json')) {
+      const match = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+      if (match) {
+        jsonText = match[1];
+      }
+    } else if (responseText.includes('```')) {
+      const match = responseText.match(/```\s*([\s\S]*?)\s*```/);
+      if (match) {
+        jsonText = match[1];
+      }
+    }
+
+    const result = JSON.parse(jsonText);
+
+    return {
+      resolution: result.resolution || '',
+      correctAnswer: result.correctAnswer || null,
+      usage: message.usage
+    };
+  } catch (error) {
+    throw new Error('Failed to generate resolution: ' + error.message);
+  }
 }
 
 module.exports = {
