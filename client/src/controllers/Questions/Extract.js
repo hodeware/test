@@ -1,6 +1,7 @@
 import jSuites from "jsuites";
 import jEditor from '../../utils/editor/editor.js';
 import { renderContent, stripHTML, typesetMath } from '../../utils/questionRenderer.js';
+import { showToast } from '../../utils/toast.js';
 
 export default function Extract() {
     let self = this;
@@ -14,7 +15,7 @@ export default function Extract() {
                 placeholder: "Paste your question content here...",
                 toolbar: true,
                 toolbarOnTop: false,
-                maxHeight: '500px',
+                height: '400px',
                 maxFileSize: 5000000,
                 allowImageResize: true,
                 dropZone: true,
@@ -28,7 +29,7 @@ export default function Extract() {
 
     self.extractQuestion = function() {
         if (!editor) {
-            alert('Editor not initialized');
+            showToast('Editor not initialized', 'error');
             return;
         }
 
@@ -37,11 +38,6 @@ export default function Extract() {
         const outputElement = self.el.querySelector('[data-json-output]');
         const loadingElement = self.el.querySelector('[data-loading]');
         const extractButton = self.el.querySelector('[data-extract-button]');
-
-        if (!data.content || !data.content.trim()) {
-            alert('Please enter some content to extract');
-            return;
-        }
 
         // Show loading state
         loadingElement.classList.remove('hidden');
@@ -93,49 +89,53 @@ export default function Extract() {
 
         const payload = {
             content: data.content,
-            images: images.length > 0 ? JSON.stringify(images) : undefined
+            images: images.length > 0 ? images : undefined
         };
 
-        jSuites.ajax({
-            url: '/api/questions/extract',
+        fetch('/api/questions/extract', {
             method: 'POST',
-            dataType: 'json',
-            data: payload,
-            success: function(result) {
-                loadingElement.classList.add('hidden');
-                extractButton.disabled = false;
-
-                if (result.success) {
-                    // Pretty print the JSON
-                    outputElement.value = JSON.stringify(result.data, null, 2);
-
-                    // Render preview
-                    self.renderPreview(result.data);
-
-                    // Show token usage
-                    const usageElement = self.el.querySelector('[data-usage]');
-                    if (result.usage && usageElement) {
-                        usageElement.textContent = `Tokens used: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out`;
-                        usageElement.classList.remove('hidden');
-                    }
-                } else {
-                    alert('Error: ' + result.message);
-                    outputElement.value = JSON.stringify({ error: result.message }, null, 2);
-                }
+            headers: {
+                'Content-Type': 'application/json'
             },
-            error: function(error) {
-                loadingElement.classList.add('hidden');
-                extractButton.disabled = false;
-                alert('Failed to extract question');
-                console.error(error);
-
-                try {
-                    const errorData = JSON.parse(error.responseText);
-                    outputElement.value = JSON.stringify({ error: errorData.message || 'Unknown error' }, null, 2);
-                } catch (e) {
-                    outputElement.value = JSON.stringify({ error: 'Failed to extract question' }, null, 2);
-                }
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
             }
+            return response.json();
+        })
+        .then(result => {
+            loadingElement.classList.add('hidden');
+            extractButton.disabled = false;
+
+            if (result.success) {
+                // Pretty print the JSON
+                outputElement.value = JSON.stringify(result.data, null, 2);
+
+                // Render preview
+                self.renderPreview(result.data);
+
+                // Show token usage
+                const usageElement = self.el.querySelector('[data-usage]');
+                if (result.usage && usageElement) {
+                    usageElement.textContent = `Tokens used: ${result.usage.inputTokens} in / ${result.usage.outputTokens} out`;
+                    usageElement.classList.remove('hidden');
+                }
+            } else {
+                alert('Error: ' + result.message);
+                outputElement.value = JSON.stringify({ error: result.message }, null, 2);
+            }
+        })
+        .catch(error => {
+            loadingElement.classList.add('hidden');
+            extractButton.disabled = false;
+            alert('Failed to extract question');
+            console.error(error);
+
+            outputElement.value = JSON.stringify({
+                error: error.message || 'Failed to extract question'
+            }, null, 2);
         });
     }
 
@@ -168,33 +168,97 @@ export default function Extract() {
         }
     }
 
+    // Store current question data
+    self.currentQuestionData = null;
+
+    self.markCorrectAnswer = function(answerId) {
+        if (!self.currentQuestionData || !self.currentQuestionData.answers) return;
+
+        // Update correct flag for all answers
+        self.currentQuestionData.answers.forEach(answer => {
+            answer.correct = (answer.id === answerId);
+        });
+
+        // Update the JSON output
+        const outputElement = self.el.querySelector('[data-json-output]');
+        outputElement.value = JSON.stringify(self.currentQuestionData, null, 2);
+
+        // Re-render preview to update radio buttons
+        self.renderPreview(self.currentQuestionData);
+    }
+
+    self.saveQuestion = function() {
+        if (!self.currentQuestionData) {
+            showToast('No question data to save', 'warning');
+            return;
+        }
+
+        // Check if at least one answer is marked as correct
+        const hasCorrectAnswer = self.currentQuestionData.answers?.some(a => a.correct);
+        if (!hasCorrectAnswer) {
+            if (!confirm('No correct answer marked. Save anyway?')) {
+                return;
+            }
+        }
+
+        const saveButton = self.el.querySelector('[data-save-button]');
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span class="material-icons animate-spin" style="font-size: 18px;">refresh</span><span>Saving...</span>';
+
+        fetch('/api/questions/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(self.currentQuestionData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(result => {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<span class="material-icons" style="font-size: 18px;">check</span><span>Saved!</span>';
+
+            setTimeout(() => {
+                saveButton.innerHTML = '<span class="material-icons" style="font-size: 18px;">save</span><span>Save Question</span>';
+            }, 2000);
+
+            if (result.success) {
+                showToast(`Question saved successfully! ID: ${result.id}`, 'success', 4000);
+            }
+        })
+        .catch(error => {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<span class="material-icons" style="font-size: 18px;">save</span><span>Save Question</span>';
+            showToast('Failed to save question: ' + (error.message || 'Unknown error'), 'error', 5000);
+            console.error(error);
+        });
+    }
+
     // Preview rendering functions (reused from Render.js)
     self.renderPreview = function(questionData) {
         const previewContainer = self.el.querySelector('[data-preview]');
         const previewContent = self.el.querySelector('[data-preview-content]');
-        const previewNumber = self.el.querySelector('[data-preview-number]');
-        const previewTitle = self.el.querySelector('[data-preview-title]');
         const previewAnswers = self.el.querySelector('[data-preview-answers]');
+
+        // Store current data
+        self.currentQuestionData = questionData;
 
         // Show preview container
         previewContainer.classList.remove('hidden');
 
-        // Set number and title
-        if (questionData.number) {
-            previewNumber.textContent = `${questionData.number}.`;
-        } else {
-            previewNumber.textContent = '';
-        }
-
         // Render content with formulas
         previewContent.innerHTML = renderContent(questionData.content, questionData.images || []);
 
-        // Render answers
+        // Render answers with radio buttons
         previewAnswers.innerHTML = '';
         if (questionData.answers && questionData.answers.length > 0) {
             questionData.answers.forEach((answer) => {
                 const answerDiv = document.createElement('div');
-                answerDiv.className = 'py-2';
+                answerDiv.className = 'py-2 flex items-start space-x-2';
 
                 // Check if answer content has placeholders {{n}}
                 const hasPlaceholders = /\{\{\d+\}\}/.test(answer.content);
@@ -205,12 +269,27 @@ export default function Extract() {
                 // Replace &nbsp; with regular spaces
                 answerContent = answerContent.replace(/&nbsp;/g, ' ');
 
+                const isChecked = answer.correct ? 'checked' : '';
+                const answerId = answer.id; // Capture in closure
+
                 answerDiv.innerHTML = `
-                    <div>
+                    <input type="radio"
+                           name="correct-answer"
+                           id="answer-${answer.id}"
+                           value="${answer.id}"
+                           ${isChecked}
+                           class="mt-1 w-4 h-4 text-green-600 focus:ring-green-500 cursor-pointer">
+                    <label for="answer-${answer.id}" class="flex-1 cursor-pointer">
                         <strong>${answer.id.toUpperCase()}</strong>) ${answerContent}
-                    </div>
+                    </label>
                 `;
                 previewAnswers.appendChild(answerDiv);
+
+                // Attach event listener to the radio button
+                const radioButton = answerDiv.querySelector('input[type="radio"]');
+                radioButton.addEventListener('change', () => {
+                    self.markCorrectAnswer(answerId);
+                });
             });
         }
 
@@ -234,35 +313,35 @@ export default function Extract() {
                     </div>
 
                     <!-- Rich Text Editor -->
-                    <div class="mb-4 flex-1">
+                    <div class="flex-1">
                         <div data-editor class="border border-gray-300 rounded-lg overflow-hidden"></div>
                         <p class="text-xs text-gray-500 mt-2">Drag and drop images or paste content directly. Supports rich text, formulas, and diagrams.</p>
-                    </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex items-center space-x-3 pt-4 border-t border-gray-200">
-                        <button type="button"
-                                onclick="self.clearAll()"
-                                class="bg-white hover:bg-gray-50 text-gray-700 font-medium px-5 py-2.5 rounded-lg border border-gray-300 transition-colors duration-150 flex items-center space-x-2">
-                            <span class="material-icons" style="font-size: 18px;">clear</span>
-                            <span>Clear</span>
-                        </button>
-                        <button type="button"
-                                data-extract-button
-                                onclick="self.extractQuestion()"
-                                class="flex-1 bg-black hover:bg-gray-800 text-white font-medium px-5 py-2.5 rounded-lg transition-colors duration-150 flex items-center justify-center space-x-2">
-                            <span class="material-icons" style="font-size: 18px;">auto_awesome</span>
-                            <span>Extract with AI</span>
-                        </button>
-                    </div>
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-3 mt-4">
+                            <button type="button"
+                                    data-extract-button
+                                    onclick="self.extractQuestion"
+                                    class="flex-1 bg-black hover:bg-gray-800 text-white font-medium px-5 py-2.5 rounded-lg transition-colors duration-150 flex items-center justify-center space-x-2">
+                                <span class="material-icons" style="font-size: 18px;">auto_awesome</span>
+                                <span>Extract with AI</span>
+                            </button>
+                            <button type="button"
+                                    onclick="self.clearAll"
+                                    class="bg-white hover:bg-gray-50 text-gray-700 font-medium px-5 py-2.5 rounded-lg border border-gray-300 transition-colors duration-150 flex items-center space-x-2">
+                                <span class="material-icons" style="font-size: 18px;">clear</span>
+                                <span>Clear</span>
+                            </button>
+                        </div>
 
-                    <!-- Loading Indicator -->
-                    <div data-loading class="hidden mt-4 flex items-center justify-center space-x-2 text-gray-900 bg-gray-50 rounded-lg py-3">
-                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span class="font-medium">Extracting with Claude AI...</span>
+                        <!-- Loading Indicator -->
+                        <div data-loading class="hidden mt-3 flex items-center justify-center space-x-2 text-gray-900 bg-gray-50 rounded-lg py-3">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="font-medium">Extracting with Claude AI...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -270,9 +349,18 @@ export default function Extract() {
                 <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
                     <!-- Preview Section -->
                     <div data-preview class="hidden mb-6 pb-6 border-b border-gray-200">
-                        <div class="mb-3">
-                            <h2 class="text-xl font-semibold text-gray-900 mb-1">Preview</h2>
-                            <p class="text-sm text-gray-500">How the question will be rendered</p>
+                        <div class="mb-3 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-900 mb-1">Preview</h2>
+                                <p class="text-sm text-gray-500">Mark the correct answer and save</p>
+                            </div>
+                            <button type="button"
+                                    data-save-button
+                                    onclick="self.saveQuestion()"
+                                    class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center space-x-2">
+                                <span class="material-icons" style="font-size: 18px;">save</span>
+                                <span>Save Question</span>
+                            </button>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <div class="mb-2">

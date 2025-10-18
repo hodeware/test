@@ -32,6 +32,7 @@ function Editor() {
             dropZone: true,
             dropAsSnippet: false,
             pasteAsSnippet: false,
+            addImageAsSnippet: false,
             acceptImages: true,
             acceptFiles: false,
             maxFileSize: 5000000,
@@ -394,7 +395,7 @@ function Editor() {
         }
 
         obj.addImage = function(data) {
-            appendFile(data)
+            appendFile(data);
         }
 
         obj.addDataFile = function(data) {
@@ -515,13 +516,6 @@ function Editor() {
                     } else {
                         // Check if is data
                         element.setAttribute('tabindex', '900');
-                        // Check attributes for persistence
-                        if (obj.options.pasteAsSnippet === true) {
-                            appendFile({
-                                result: element.src,
-                                size: element.length,
-                            });
-                        }
                     }
                 }
                 // Remove attributes
@@ -570,10 +564,25 @@ function Editor() {
                 data = data.replace(/<!\[endif\]>/gi, '');
                 // Remove Word's XML namespace tags (w:, o:, m:, v:)
                 data = data.replace(/<\/?[womv]:[^>]*>/gi, '');
+
+                // Remove ALL line breaks and extra whitespace from the HTML string
+                // This handles both line breaks in tags AND in text content
+                // First, remove line breaks within HTML tags (style attributes, etc.)
+                while (/<[^>]*[\r\n][^>]*>/g.test(data)) {
+                    data = data.replace(/<([^>]*)[\r\n]+([^>]*)>/g, '<$1 $2>');
+                }
+
+                // Remove line breaks between tags and text content (Word soft returns)
+                // This preserves the structure by replacing \r\n or \n with a space
+                // but ONLY when not between closing and opening tags
+                data = data.replace(/([^>])[\r\n]+([^<])/g, '$1 $2');
             }
             var parser = new DOMParser();
             var d = parser.parseFromString(data, "text/html");
+
+            // Now parse and clean the HTML
             parse(d);
+
             var div = document.createElement('div');
             div.innerHTML = d.firstChild.innerHTML;
             return div;

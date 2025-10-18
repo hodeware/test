@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const { extractQuestion } = require('../controllers/question.controller');
-const { getQuestionById } = require('../controllers/questionRender.controller');
-
-// Configure multer for form-data parsing (no file upload, just fields)
-const upload = multer();
+const { extractQuestion, getQuestionById, saveQuestion } = require('../controllers/questions');
 
 // POST /api/questions/extract - Extract question from text content
-router.post('/extract', upload.none(), extractQuestion);
+router.post('/extract', extractQuestion);
+
+// POST /api/questions/save - Save question to data folder
+router.post('/save', saveQuestion);
 
 // GET /api/questions/render/:id - Get question by ID for rendering
 router.get('/render/:id', getQuestionById);
